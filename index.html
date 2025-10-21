@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sant Andreu de Llavaneres - Tiempo y Webcam</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            animation: fadeIn 1s ease-in;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        @media (min-width: 768px) {
+            .content {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            animation: slideUp 0.5s ease-out;
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .weather-info {
+            display: grid;
+            gap: 15px;
+        }
+
+        .weather-main {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            border-radius: 10px;
+        }
+
+        .temperature {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .weather-icon {
+            font-size: 4rem;
+        }
+
+        .weather-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .detail-item {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .detail-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .detail-value {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .webcam-container {
+            width: 100%;
+        }
+
+        .webcam-frame {
+            width: 100%;
+            height: 400px;
+            border: none;
+            border-radius: 10px;
+            background: #f0f0f0;
+        }
+
+        .webcam-links {
+            margin-top: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .webcam-link {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .webcam-link:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .update-time {
+            text-align: center;
+            color: white;
+            margin-top: 20px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .forecast {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .forecast-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .forecast-day {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .forecast-temp {
+            font-size: 1.2rem;
+            color: #333;
+        }
+
+        .forecast-icon {
+            font-size: 2rem;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏖️ Sant Andreu de Llavaneres</h1>
+            <p class="subtitle">Tiempo actual y vistas en vivo</p>
+        </header>
+
+        <div class="content">
+            <div class="card">
+                <h2>⛅ Tiempo Actual</h2>
+                <div id="weather-content" class="weather-info">
+                    <div class="loading">Cargando información del tiempo...</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>📹 Webcam en Vivo</h2>
+                <div class="webcam-container">
+                    <p style="margin-bottom: 15px; color: #666;">
+                        Vistas en vivo de Sant Andreu de Llavaneres y alrededores:
+                    </p>
+                    <div class="webcam-links">
+                        <a href="https://www.outdooractive.com/es/webcams/sant-andreu-de-llavaneres/webcams-en-sant-andreu-de-llavaneres/227981523/"
+                           target="_blank"
+                           class="webcam-link">
+                            🎥 Webcams Sant Andreu
+                        </a>
+                        <a href="https://es.windfinder.com/webcams/sant_andreu_de_llavaneres"
+                           target="_blank"
+                           class="webcam-link">
+                            🌊 Webcams Playa
+                        </a>
+                        <a href="https://www.meteoblue.com/en/weather/webcams/sant-andreu-de-llavaneres_spain_3110881"
+                           target="_blank"
+                           class="webcam-link">
+                            🏔️ Webcams Zona
+                        </a>
+                    </div>
+                    <div style="margin-top: 20px; padding: 20px; background: #f8f9fa; border-radius: 10px;">
+                        <iframe
+                            class="webcam-frame"
+                            src="https://www.skylinewebcams.com/es/webcam/espana/cataluna/barcelona/port-balis.html"
+                            title="Webcam Port Balís">
+                        </iframe>
+                        <p style="text-align: center; margin-top: 10px; color: #666; font-size: 0.9rem;">
+                            Vista del Port Balís, Sant Andreu de Llavaneres
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="animation-delay: 0.2s;">
+            <h2>📅 Previsión 5 Días</h2>
+            <div id="forecast-content" class="forecast">
+                <div class="loading">Cargando previsión...</div>
+            </div>
+        </div>
+
+        <div class="update-time" id="update-time"></div>
+    </div>
+
+    <script>
+        // Coordenadas de Sant Andreu de Llavaneres
+        const LAT = 41.5737;
+        const LON = 2.4886;
+
+        // Función para obtener el icono del tiempo según el código WMO
+        function getWeatherIcon(code) {
+            const icons = {
+                0: '☀️',  // Despejado
+                1: '🌤️',  // Principalmente despejado
+                2: '⛅',  // Parcialmente nublado
+                3: '☁️',  // Nublado
+                45: '🌫️', // Niebla
+                48: '🌫️', // Niebla con escarcha
+                51: '🌦️', // Llovizna ligera
+                53: '🌦️', // Llovizna moderada
+                55: '🌦️', // Llovizna densa
+                61: '🌧️', // Lluvia ligera
+                63: '🌧️', // Lluvia moderada
+                65: '🌧️', // Lluvia fuerte
+                71: '🌨️', // Nevada ligera
+                73: '🌨️', // Nevada moderada
+                75: '🌨️', // Nevada fuerte
+                77: '❄️',  // Granizo
+                80: '🌦️', // Chubascos ligeros
+                81: '⛈️', // Chubascos moderados
+                82: '⛈️', // Chubascos fuertes
+                85: '🌨️', // Chubascos de nieve ligeros
+                86: '🌨️', // Chubascos de nieve fuertes
+                95: '⛈️', // Tormenta
+                96: '⛈️', // Tormenta con granizo ligero
+                99: '⛈️'  // Tormenta con granizo fuerte
+            };
+            return icons[code] || '🌡️';
+        }
+
+        // Función para obtener el nombre del día
+        function getDayName(dateString) {
+            const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+            const date = new Date(dateString);
+            return days[date.getDay()];
+        }
+
+        // Cargar datos del tiempo
+        async function loadWeather() {
+            try {
+                const response = await fetch(
+                    `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m,wind_direction_10m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Europe/Madrid&forecast_days=5`
+                );
+
+                if (!response.ok) {
+                    throw new Error('Error al obtener datos del tiempo');
+                }
+
+                const data = await response.json();
+                displayWeather(data);
+                displayForecast(data);
+
+                // Actualizar hora de actualización
+                const now = new Date();
+                document.getElementById('update-time').textContent =
+                    `Última actualización: ${now.toLocaleString('es-ES')}`;
+
+            } catch (error) {
+                document.getElementById('weather-content').innerHTML =
+                    `<div class="error">Error al cargar el tiempo: ${error.message}</div>`;
+            }
+        }
+
+        // Mostrar tiempo actual
+        function displayWeather(data) {
+            const current = data.current;
+            const weatherCode = current.weather_code;
+            const icon = getWeatherIcon(weatherCode);
+
+            const html = `
+                <div class="weather-main">
+                    <div>
+                        <div class="temperature">${Math.round(current.temperature_2m)}°C</div>
+                        <div style="color: #666; margin-top: 5px;">
+                            Sensación: ${Math.round(current.apparent_temperature)}°C
+                        </div>
+                    </div>
+                    <div class="weather-icon">${icon}</div>
+                </div>
+                <div class="weather-details">
+                    <div class="detail-item">
+                        <div class="detail-label">💧 Humedad</div>
+                        <div class="detail-value">${current.relative_humidity_2m}%</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">💨 Viento</div>
+                        <div class="detail-value">${Math.round(current.wind_speed_10m)} km/h</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">🌧️ Precipitación</div>
+                        <div class="detail-value">${current.precipitation} mm</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">🧭 Dirección</div>
+                        <div class="detail-value">${current.wind_direction_10m}°</div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('weather-content').innerHTML = html;
+        }
+
+        // Mostrar previsión
+        function displayForecast(data) {
+            const daily = data.daily;
+            let html = '';
+
+            for (let i = 0; i < 5; i++) {
+                const icon = getWeatherIcon(daily.weather_code[i]);
+                const dayName = i === 0 ? 'Hoy' : getDayName(daily.time[i]);
+
+                html += `
+                    <div class="forecast-item">
+                        <div class="forecast-day">${dayName}</div>
+                        <div class="forecast-icon">${icon}</div>
+                        <div class="forecast-temp">
+                            ${Math.round(daily.temperature_2m_max[i])}° / ${Math.round(daily.temperature_2m_min[i])}°
+                        </div>
+                    </div>
+                `;
+            }
+
+            document.getElementById('forecast-content').innerHTML = html;
+        }
+
+        // Cargar datos al iniciar
+        loadWeather();
+
+        // Actualizar cada 10 minutos
+        setInterval(loadWeather, 10 * 60 * 1000);
+    </script>
+</body>
+</html>
